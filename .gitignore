@@ -1,0 +1,34 @@
+# Environment variables & secrets (CRITICAL: Do not commit)
+.env
+.env*
+*.env
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local database & logs
+*.db
+*.sqlite3
+*.log
+
+# Workspace & IDE
+.vscode/
+.idea/
+
+# OS artifacts
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Temporary uploads & local scratch
+uploads/
+scratch/
+test_*.db

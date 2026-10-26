@@ -7,5 +7,7 @@
   "python.analysis.diagnosticSeverityOverrides": {
     "reportMissingImports": "none",
     "reportMissingModuleSource": "none"
-  }
+  },
+  "python-envs.defaultEnvManager": "ms-python.python:system",
+  "python.terminal.useEnvFile": true
 }

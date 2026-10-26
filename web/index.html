@@ -1,348 +1,615 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AWS Document Intelligence Studio | Serverless IDP</title>
-  <meta name="description" content="Production-ready serverless document processing pipeline using AWS S3, Lambda, Textract, Comprehend, and DynamoDB.">
+  <title>DocAudit-Core | Enterprise Financial Intelligence & Audit System</title>
+  <meta name="description" content="Enterprise-grade document ingestion, OCR parsing, and deterministic financial auditing backend service.">
+  
+  <!-- Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#090d16',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="app-layout">
-    <!-- Top Enterprise Navigation Header -->
-    <header class="header">
-      <div class="brand">
-        <div class="brand-logo">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-          </svg>
+<body class="bg-[#090d16] text-slate-100 font-sans antialiased min-h-screen selection:bg-emerald-500/20 selection:text-emerald-300">
+
+  <!-- ========================================================================= -->
+  <!-- TOP ENTERPRISE NAVIGATION BAR                                              -->
+  <!-- ========================================================================= -->
+  <header class="border-b border-slate-800/80 bg-[#0c1220]/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Left: Logo & Badges -->
+      <div class="flex items-center space-x-3">
+        <div class="h-9 w-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-sm shadow-emerald-500/10">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
         </div>
-        <div class="brand-text">
-          <h1>
-            Document Intelligence Studio
-            <span class="version-tag">Serverless IDP</span>
-          </h1>
-          <p class="subtitle">Amazon S3 ➔ Lambda Handler ➔ AWS Textract ➔ AWS Comprehend ➔ Amazon DynamoDB</p>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-slate-100 text-base tracking-tight">DocAudit</span>
+            <span class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">CORE</span>
+            <span class="text-[10px] text-emerald-400 font-medium px-1.5 py-0.5 bg-emerald-950/60 border border-emerald-800/60 rounded">v1.2</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Agentic Document Intelligence & Deterministic Audit Engine</p>
         </div>
       </div>
 
-      <div class="header-status">
-        <div class="pipeline-tags">
-          <span class="service-tag s3"><span class="dot"></span>S3</span>
-          <span class="service-arrow">→</span>
-          <span class="service-tag lambda"><span class="dot"></span>Lambda</span>
-          <span class="service-arrow">→</span>
-          <span class="service-tag textract"><span class="dot"></span>Textract</span>
-          <span class="service-arrow">+</span>
-          <span class="service-tag comprehend"><span class="dot"></span>Comprehend</span>
-          <span class="service-arrow">→</span>
-          <span class="service-tag dynamodb"><span class="dot"></span>DynamoDB</span>
+      <!-- Right: System Status & Utility Controls -->
+      <div class="flex items-center space-x-3">
+        
+        <!-- Live Backend Status Pill -->
+        <div id="connectionStatusPill" class="flex items-center space-x-2 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs">
+          <span class="relative flex h-2 w-2">
+            <span id="statusPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span id="statusDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="statusText" class="font-mono text-[11px] text-slate-300">Checking API...</span>
         </div>
-        <div id="systemStatusBadge" class="mode-badge sandbox">
-          <span class="mode-indicator"></span>
-          <span id="statusModeText">Checking AWS...</span>
-        </div>
-      </div>
-    </header>
 
-    <!-- KPI Metrics Summary Bar -->
-    <section class="stats-strip">
-      <div class="stat-card">
-        <div class="stat-header">
-          <span class="stat-label">Processed Documents</span>
-          <svg class="stat-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        </div>
-        <div class="stat-value" id="statTotalDocs">0</div>
-        <div class="stat-sub">
-          <span class="stat-badge">Live NoSQL</span>
-          <span>Indexed in DynamoDB</span>
-        </div>
-      </div>
+        <!-- Demo / Simulator Toggle -->
+        <button id="demoToggleBtn" class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-xs text-slate-300 transition-colors" title="Toggle Demo Simulator Mode">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span id="demoModeLabel">Demo Off</span>
+        </button>
 
-      <div class="stat-card">
-        <div class="stat-header">
-          <span class="stat-label">Avg. Pipeline Latency</span>
-          <svg class="stat-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-        </div>
-        <div class="stat-value" id="statAvgLatency">0 ms</div>
-        <div class="stat-sub">
-          <span class="stat-badge">Serverless</span>
-          <span>End-to-end ingestion</span>
-        </div>
-      </div>
+        <!-- API Config Settings Button -->
+        <button id="openSettingsBtn" class="p-1.5 rounded-md border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors" title="API Configuration">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
 
-      <div class="stat-card">
-        <div class="stat-header">
-          <span class="stat-label">Extracted Entities (NER)</span>
-          <svg class="stat-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        <!-- Swagger Docs Link -->
+        <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer" class="hidden md:flex items-center space-x-1 px-2.5 py-1.5 rounded-md border border-slate-800 hover:border-slate-700 bg-slate-900 text-xs text-slate-300 hover:text-slate-100 transition-colors">
+          <span>OpenAPI Docs</span>
+          <i data-lucide="external-link" class="w-3 h-3 text-slate-400"></i>
+        </a>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE CONTAINER                                                  -->
+  <!-- ========================================================================= -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- KPI Metrics Ribbon Strip -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      
+      <!-- Metric 1: Total Documents -->
+      <div class="bg-[#0f172a]/70 border border-slate-800 rounded-xl p-4">
+        <div class="flex items-center justify-between text-slate-400 text-xs">
+          <span>Total Ingested</span>
+          <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
         </div>
-        <div class="stat-value" id="statTotalEntities">0</div>
-        <div class="stat-sub">
-          <span class="stat-badge">Comprehend</span>
-          <span>Categorized entities</span>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotalDocs" class="text-2xl font-bold font-mono tracking-tight text-slate-100">0</span>
+          <span class="text-[11px] text-slate-500">Documents</span>
         </div>
       </div>
 
-      <div class="stat-card">
-        <div class="stat-header">
-          <span class="stat-label">OCR Confidence</span>
-          <svg class="stat-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <!-- Metric 2: Compliance Approved -->
+      <div class="bg-[#0f172a]/70 border border-slate-800 rounded-xl p-4">
+        <div class="flex items-center justify-between text-slate-400 text-xs">
+          <span>Ledger Approved</span>
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>
         </div>
-        <div class="stat-value highlight">99.2%</div>
-        <div class="stat-sub">
-          <span class="stat-badge">Textract</span>
-          <span>Average line accuracy</span>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiApproved" class="text-2xl font-bold font-mono tracking-tight text-emerald-400">0</span>
+          <span class="text-[11px] text-emerald-500/80 font-mono">100% Math Match</span>
         </div>
       </div>
+
+      <!-- Metric 3: Pending Review / Discrepancy -->
+      <div class="bg-[#0f172a]/70 border border-slate-800 rounded-xl p-4">
+        <div class="flex items-center justify-between text-slate-400 text-xs">
+          <span>Pending Auditor Review</span>
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiPending" class="text-2xl font-bold font-mono tracking-tight text-amber-400">0</span>
+          <span class="text-[11px] text-amber-500/80 font-mono">HITL Paused</span>
+        </div>
+      </div>
+
+      <!-- Metric 4: Audited Amount USD -->
+      <div class="bg-[#0f172a]/70 border border-slate-800 rounded-xl p-4">
+        <div class="flex items-center justify-between text-slate-400 text-xs">
+          <span>Audited Capital</span>
+          <i data-lucide="dollar-sign" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotalCapital" class="text-2xl font-bold font-mono tracking-tight text-slate-100">$0.00</span>
+          <span class="text-[11px] text-slate-500 font-mono">USD</span>
+        </div>
+      </div>
+
     </section>
 
-    <!-- Main Workspace Layout -->
-    <main class="main-content">
-      <!-- Left Column: Ingestion & Serverless Execution Log -->
-      <section class="left-panel">
-        <div class="panel-card upload-section">
-          <div class="section-title">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <h2>Document Ingestion</h2>
-          </div>
-          <p class="section-desc">Upload documents to trigger automated S3 event notifications and serverless extraction.</p>
+    <!-- Error / Network Troubleshooting Banner (Hidden by default) -->
+    <div id="errorBanner" class="hidden rounded-xl border border-rose-500/40 bg-rose-950/40 p-4 transition-all">
+      <div class="flex items-start space-x-3">
+        <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5"></i>
+        <div class="flex-1 text-sm text-rose-200">
+          <h4 class="font-semibold text-rose-100" id="errorBannerTitle">Backend Connection Error</h4>
+          <p class="mt-1 text-xs text-rose-300/90" id="errorBannerDesc">
+            Unable to connect to FastAPI backend at <code>http://localhost:8000</code>. Ensure Uvicorn is active or toggle Demo Mode.
+          </p>
+        </div>
+        <button id="dismissErrorBtn" class="text-rose-400 hover:text-rose-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
 
-          <div class="dropzone" id="dropZone">
-            <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.txt" style="display:none;">
-            <div class="dropzone-icon">
-              <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+    <!-- Dual Cockpit Layout: 5 Columns Left (Upload), 7 Columns Right (Inspection) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- ===================================================================== -->
+      <!-- LEFT COCKPIT: INVOICE INGESTION & PIPELINE STEPPER                     -->
+      <!-- ===================================================================== -->
+      <section class="lg:col-span-5 space-y-5">
+        
+        <!-- Upload Card -->
+        <div class="bg-[#0f172a]/90 border border-slate-800 rounded-xl p-5 shadow-lg shadow-black/20">
+          
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-100">Document Ingestion Cockpit</h2>
+              <p class="text-xs text-slate-400">Supports PDF, PNG, JPG up to 25MB</p>
             </div>
-            <div class="dropzone-text">
-              <strong>Click to upload</strong> or drag and drop
-            </div>
-            <div class="dropzone-hint">PDF, PNG, JPG, or TXT (Max 15MB)</div>
+            <button id="sampleInvoiceBtn" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center space-x-1 transition-colors" title="Load sample dummy invoice">
+              <i data-lucide="file-plus-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Sample PDF</span>
+            </button>
           </div>
 
-          <div class="samples-container">
-            <div class="samples-title">Pre-loaded Enterprise Templates</div>
-            <div class="samples-grid">
-              <button class="sample-btn" data-sample="invoice">
-                <span class="sample-icon">📄</span>
-                <span class="sample-info">
-                  <strong>Commercial Consulting Invoice</strong>
-                  <small>Vendor, line items, tax, total due</small>
-                </span>
-              </button>
-              <button class="sample-btn" data-sample="resume">
-                <span class="sample-icon">👤</span>
-                <span class="sample-info">
-                  <strong>Solutions Architect Resume</strong>
-                  <small>Candidate, skills, experience, education</small>
-                </span>
-              </button>
-              <button class="sample-btn" data-sample="id_card">
-                <span class="sample-icon">🪪</span>
-                <span class="sample-info">
-                  <strong>State Identification / Driver License</strong>
-                  <small>Legal name, DOB, license #, expiration</small>
-                </span>
-              </button>
+          <!-- Drag and Drop Area -->
+          <div id="dropZone" class="mt-4 border-2 border-dashed border-slate-700/80 hover:border-emerald-500/50 rounded-xl p-6 text-center transition-all cursor-pointer bg-slate-900/40 hover:bg-slate-900/80 group">
+            <input type="file" id="fileInput" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.txt">
+            
+            <div class="flex flex-col items-center justify-center space-y-3">
+              <div class="h-12 w-12 rounded-full bg-slate-800/90 group-hover:bg-emerald-500/10 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 border border-slate-700 group-hover:border-emerald-500/30 transition-colors">
+                <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+              </div>
+              
+              <div>
+                <p class="text-sm font-medium text-slate-200">
+                  <span class="text-emerald-400 underline decoration-emerald-500/30 underline-offset-2">Click to upload</span> or drag document here
+                </p>
+                <p class="text-xs text-slate-500 mt-1">PDF, Scanned Invoices, Receipts, or TXT</p>
+              </div>
+
+              <div class="flex items-center space-x-2 text-[11px] text-slate-400 pt-1 font-mono">
+                <span class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">PDF</span>
+                <span class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">PNG</span>
+                <span class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">JPG</span>
+                <span class="text-slate-500">Max 25MB</span>
+              </div>
             </div>
           </div>
+
+          <!-- Selected File Preview Badge (Hidden initially) -->
+          <div id="selectedFileCard" class="hidden mt-4 p-3 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-between">
+            <div class="flex items-center space-x-3 overflow-hidden">
+              <div class="h-8 w-8 rounded bg-slate-800 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="file" class="w-4 h-4"></i>
+              </div>
+              <div class="min-w-0">
+                <p id="selectedFileName" class="text-xs font-medium text-slate-200 truncate">invoice.pdf</p>
+                <p id="selectedFileSize" class="text-[11px] text-slate-500 font-mono">1.2 MB</p>
+              </div>
+            </div>
+            <button id="clearFileBtn" class="text-slate-400 hover:text-slate-200 p-1" title="Remove file">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Primary Audit Action Button -->
+          <button id="auditDocBtn" disabled class="mt-4 w-full py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed font-medium text-sm text-white shadow-sm shadow-emerald-950 transition-all flex items-center justify-center space-x-2">
+            <i data-lucide="play" class="w-4 h-4"></i>
+            <span>Execute Agentic Audit</span>
+          </button>
+
+          <!-- Pipeline Processing Stepper Progress -->
+          <div id="pipelineProgressContainer" class="hidden mt-5 pt-4 border-t border-slate-800 space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <span id="pipelineStepTitle" class="font-medium text-emerald-400">Ingesting Document...</span>
+              <span id="pipelineStepPercent" class="font-mono text-slate-400 text-[11px]">33%</span>
+            </div>
+            
+            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div id="pipelineProgressBar" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-300 w-1/3"></div>
+            </div>
+
+            <!-- Pipeline 3-step checklist -->
+            <div class="space-y-1.5 pt-1 text-[11px] font-mono">
+              <div id="stepS3" class="flex items-center space-x-2 text-slate-400">
+                <i data-lucide="circle-dashed" class="w-3.5 h-3.5 text-slate-500 step-icon"></i>
+                <span>1. S3 Immutable Storage Archival</span>
+              </div>
+              <div id="stepOCR" class="flex items-center space-x-2 text-slate-400">
+                <i data-lucide="circle-dashed" class="w-3.5 h-3.5 text-slate-500 step-icon"></i>
+                <span>2. OCR & In-Memory Entity Extraction</span>
+              </div>
+              <div id="stepRules" class="flex items-center space-x-2 text-slate-400">
+                <i data-lucide="circle-dashed" class="w-3.5 h-3.5 text-slate-500 step-icon"></i>
+                <span>3. LangGraph Deterministic Audit</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Pipeline Orchestration Audit Stepper -->
-        <div class="panel-card pipeline-card">
-          <div class="section-title">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <h2>Pipeline Execution Trace</h2>
+        <!-- System Architecture Reference Accordion -->
+        <div class="bg-[#0f172a]/70 border border-slate-800 rounded-xl p-4 text-xs text-slate-400 space-y-2">
+          <div class="flex items-center space-x-2 text-slate-300 font-semibold text-xs">
+            <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
+            <span>Architecture Guarantee</span>
           </div>
-          <div class="stepper-list" id="pipelineStepper">
-            <div class="stepper-step" id="step-s3">
-              <div class="step-marker">1</div>
-              <div class="step-content">
-                <strong>S3 Bucket Ingestion</strong>
-                <p>Stores binary document in encrypted S3 bucket</p>
-              </div>
-              <div class="step-status">Standby</div>
-            </div>
-            <div class="stepper-step" id="step-lambda">
-              <div class="step-marker">2</div>
-              <div class="step-content">
-                <strong>Lambda Event Trigger</strong>
-                <p>s3:ObjectCreated dispatches event to Python 3.12</p>
-              </div>
-              <div class="step-status">Standby</div>
-            </div>
-            <div class="stepper-step" id="step-textract">
-              <div class="step-marker">3</div>
-              <div class="step-content">
-                <strong>AWS Textract (OCR & Forms)</strong>
-                <p>Extracts raw text, table structures & key-value pairs</p>
-              </div>
-              <div class="step-status">Standby</div>
-            </div>
-            <div class="stepper-step" id="step-comprehend">
-              <div class="step-marker">4</div>
-              <div class="step-content">
-                <strong>AWS Comprehend (NLP/NER)</strong>
-                <p>Identifies named entities, types & key phrases</p>
-              </div>
-              <div class="step-status">Standby</div>
-            </div>
-            <div class="stepper-step" id="step-dynamo">
-              <div class="step-marker">5</div>
-              <div class="step-content">
-                <strong>DynamoDB Catalog</strong>
-                <p>Indexed in ProcessedDocuments NoSQL catalog</p>
-              </div>
-              <div class="step-status">Standby</div>
-            </div>
-          </div>
+          <p class="text-[11px] leading-relaxed text-slate-400">
+            <strong>Zero Math Hallucination:</strong> Entity recognition is performed by LLMs, but financial math, tax rates, and date boundaries are enforced strictly by deterministic Python Decimal engines.
+          </p>
         </div>
+
       </section>
 
-      <!-- Right Column: Document Intelligence Inspection Workbench -->
-      <section class="right-panel">
-        <div class="panel-card result-card">
-          <div class="result-header">
-            <div class="result-meta">
-              <span class="category-badge" id="resCategory">No Document Loaded</span>
-              <h3 id="resFilename">Select or upload a document</h3>
-              <div class="meta-row">
-                <span id="resDocId">ID: --</span>
-                <span class="meta-dot">•</span>
-                <span id="resLatency">Latency: -- ms</span>
-                <span class="meta-dot">•</span>
-                <span id="resWords">Word Count: 0</span>
+      <!-- ===================================================================== -->
+      <!-- RIGHT COCKPIT: ACTIVE AUDIT INSPECTION VIEW                            -->
+      <!-- ===================================================================== -->
+      <section class="lg:col-span-7 space-y-5">
+        
+        <!-- Inspection Wrapper Card -->
+        <div id="auditInspectionCard" class="bg-[#0f172a]/90 border border-slate-800 rounded-xl p-5 shadow-lg shadow-black/20">
+          
+          <!-- State 1: Empty Placeholder (Before Upload) -->
+          <div id="auditEmptyState" class="py-16 text-center space-y-3">
+            <div class="h-14 w-14 mx-auto rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600">
+              <i data-lucide="file-search" class="w-7 h-7"></i>
+            </div>
+            <h3 class="text-sm font-semibold text-slate-300">No Document Under Inspection</h3>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">
+              Upload an invoice on the left or click "Sample PDF" to run the autonomous financial audit workflow.
+            </p>
+          </div>
+
+          <!-- State 2: Active Document Audit Result (Hidden initially) -->
+          <div id="auditActiveState" class="hidden space-y-5">
+            
+            <!-- Audit Header Banner -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h3 id="docTitle" class="text-base font-semibold text-slate-100 font-mono truncate max-w-xs">invoice.pdf</h3>
+                  <span id="auditStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold border flex items-center space-x-1">
+                    <span id="statusBadgeText">APPROVED</span>
+                  </span>
+                </div>
+                
+                <!-- Execution Thread & S3 URI Copy Tags -->
+                <div class="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-slate-400">
+                  <div class="flex items-center space-x-1 font-mono text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                    <span class="text-slate-500">Thread:</span>
+                    <span id="threadIdDisplay" class="text-slate-300 font-semibold">doc_abc123</span>
+                    <button id="copyThreadBtn" class="text-slate-400 hover:text-slate-200 ml-1" title="Copy Thread ID">
+                      <i data-lucide="copy" class="w-3 h-3"></i>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center space-x-1 font-mono text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800 truncate max-w-xs" title="S3 Canonical URI">
+                    <span class="text-slate-500">S3:</span>
+                    <span id="s3UriDisplay" class="text-slate-300 truncate">s3://bucket/...</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Action Tools: Raw JSON & Status Refresh -->
+              <div class="flex items-center space-x-2">
+                <button id="openRawJsonBtn" class="px-2.5 py-1.5 rounded-md border border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-xs text-slate-300 font-mono flex items-center space-x-1">
+                  <i data-lucide="code-2" class="w-3.5 h-3.5 text-sky-400"></i>
+                  <span>Raw JSON</span>
+                </button>
               </div>
             </div>
-            <div class="result-actions">
-              <button id="copyJsonBtn" class="btn secondary-btn" title="Copy full DynamoDB JSON">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                Copy JSON
-              </button>
+
+            <!-- High Visibility Discrepancy Alert Banner (Conditional) -->
+            <div id="discrepancyBanner" class="hidden rounded-lg border border-amber-500/40 bg-amber-950/30 p-4 space-y-2">
+              <div class="flex items-center space-x-2 text-amber-400 font-semibold text-xs">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                <span id="discrepancyCountText">Accounting Discrepancies Detected</span>
+              </div>
+              <ul id="discrepancyList" class="space-y-1.5 text-xs text-amber-200/90 pl-6 list-disc font-mono text-[11px]">
+                <!-- Populated dynamically -->
+              </ul>
             </div>
-          </div>
 
-          <!-- Analysis Tab Navigation -->
-          <div class="tabs-bar">
-            <button class="tab-btn active" data-tab="tab-kv">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
-              Key-Value Fields
-            </button>
-            <button class="tab-btn" data-tab="tab-entities">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-              Entities (NER)
-            </button>
-            <button class="tab-btn" data-tab="tab-phrases">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-              Key Phrases
-            </button>
-            <button class="tab-btn" data-tab="tab-ocr">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
-              OCR Plaintext
-            </button>
-            <button class="tab-btn" data-tab="tab-json">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              DynamoDB Payload
-            </button>
-          </div>
-
-          <!-- Tab 1: Key-Value Form Fields -->
-          <div class="tab-pane active" id="tab-kv">
-            <div class="table-container">
-              <table class="kv-table">
-                <thead>
-                  <tr>
-                    <th style="width: 35%;">Extracted Field (Key)</th>
-                    <th style="width: 45%;">Extracted Value</th>
-                    <th style="width: 20%;">Engine</th>
-                  </tr>
-                </thead>
-                <tbody id="kvTableBody">
-                  <tr>
-                    <td colspan="3" class="empty-state">Upload an invoice, resume, or ID form to view extracted key-value pairs.</td>
-                  </tr>
-                </tbody>
-              </table>
+            <!-- Extracted Document Metadata Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900/60 p-3.5 rounded-lg border border-slate-800/80">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-wider block">Vendor / Billing</span>
+                <span id="metaVendor" class="text-xs font-semibold text-slate-200 block truncate mt-0.5">-</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-wider block">Invoice Number</span>
+                <span id="metaInvoiceNo" class="text-xs font-mono font-semibold text-slate-200 block truncate mt-0.5">-</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-wider block">Issue Date</span>
+                <span id="metaDate" class="text-xs font-mono text-slate-200 block mt-0.5">-</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-wider block">Payment Due</span>
+                <span id="metaDueDate" class="text-xs font-mono text-slate-200 block mt-0.5">-</span>
+              </div>
             </div>
-          </div>
 
-          <!-- Tab 2: Entities & NER -->
-          <div class="tab-pane" id="tab-entities">
-            <div class="entities-legend">
-              <span class="legend-chip PERSON">PERSON</span>
-              <span class="legend-chip ORGANIZATION">ORGANIZATION</span>
-              <span class="legend-chip DATE">DATE</span>
-              <span class="legend-chip QUANTITY">QUANTITY / CURRENCY</span>
-              <span class="legend-chip LOCATION">LOCATION</span>
-              <span class="legend-chip OTHER">OTHER</span>
+            <!-- Autonomous Verification Checklist (4 Pillars) -->
+            <div class="space-y-2">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Automated Verification Checklist</span>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                
+                <div id="checkMath" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/40 text-xs">
+                  <div class="flex items-center space-x-1.5 text-emerald-400">
+                    <i data-lucide="check" class="w-3.5 h-3.5 check-icon"></i>
+                    <span class="font-medium text-[11px]">Math Balance</span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-1">Σ(Items) = Subtotal</p>
+                </div>
+
+                <div id="checkTax" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/40 text-xs">
+                  <div class="flex items-center space-x-1.5 text-emerald-400">
+                    <i data-lucide="check" class="w-3.5 h-3.5 check-icon"></i>
+                    <span class="font-medium text-[11px]">Tax Verification</span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-1">Subtotal + Tax = Total</p>
+                </div>
+
+                <div id="checkDate" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/40 text-xs">
+                  <div class="flex items-center space-x-1.5 text-emerald-400">
+                    <i data-lucide="check" class="w-3.5 h-3.5 check-icon"></i>
+                    <span class="font-medium text-[11px]">Date Freshness</span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-1">< 180 Days, Not Future</p>
+                </div>
+
+                <div id="checkItems" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/40 text-xs">
+                  <div class="flex items-center space-x-1.5 text-emerald-400">
+                    <i data-lucide="check" class="w-3.5 h-3.5 check-icon"></i>
+                    <span class="font-medium text-[11px]">Item Integrity</span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-1">Qty > 0 & Price ≥ 0</p>
+                </div>
+
+              </div>
             </div>
-            <div class="entities-grid" id="entitiesGrid">
-              <div class="empty-state">No entities to display yet.</div>
+
+            <!-- Extracted Line Items Table -->
+            <div class="space-y-2">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Itemized Ledger Breakdown</span>
+              <div class="border border-slate-800 rounded-lg overflow-hidden">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-900/90 text-slate-400 border-b border-slate-800 text-[11px]">
+                    <tr>
+                      <th class="py-2.5 px-3">Description</th>
+                      <th class="py-2.5 px-3 text-right">Qty</th>
+                      <th class="py-2.5 px-3 text-right">Unit Price</th>
+                      <th class="py-2.5 px-3 text-right">Line Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lineItemsTableBody" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
 
-          <!-- Tab 3: Key Phrases -->
-          <div class="tab-pane" id="tab-phrases">
-            <div class="phrases-cloud" id="phrasesCloud">
-              <div class="empty-state">AWS Comprehend key phrases will appear here.</div>
+            <!-- Financial Parity Totals Summary -->
+            <div class="flex justify-end pt-2">
+              <div class="w-full sm:w-72 bg-slate-900/80 p-3.5 rounded-lg border border-slate-800 space-y-2 font-mono text-xs">
+                <div class="flex justify-between text-slate-400">
+                  <span>Subtotal:</span>
+                  <span id="summarySubtotal" class="tabular-nums text-slate-200">$0.00</span>
+                </div>
+                <div class="flex justify-between text-slate-400">
+                  <span>Tax / GST:</span>
+                  <span id="summaryTax" class="tabular-nums text-slate-200">$0.00</span>
+                </div>
+                <div class="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm text-slate-100">
+                  <span>Grand Total:</span>
+                  <span id="summaryGrandTotal" class="tabular-nums text-emerald-400">$0.00</span>
+                </div>
+              </div>
             </div>
+
+            <!-- Human-In-The-Loop (HITL) Review Decision Bar -->
+            <div class="border-t border-slate-800/80 pt-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-300">Auditor Decision & Ledger Resolution</span>
+                <span class="text-[10px] text-slate-500 font-mono">LangGraph Checkpoint Resume</span>
+              </div>
+
+              <!-- Commentary input -->
+              <input type="text" id="reviewerNotesInput" placeholder="Add auditor notes or justification for override (optional)..." class="w-full text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-700/80 focus:border-emerald-500 focus:outline-none text-slate-200 placeholder-slate-500 font-sans">
+
+              <!-- 3 Review Buttons -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button id="hitlApproveBtn" class="py-2 px-3 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 border border-emerald-500/30 text-white font-medium text-xs flex items-center justify-center space-x-1.5 transition-colors">
+                  <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                  <span>Approve & Post</span>
+                </button>
+
+                <button id="hitlFlagBtn" class="py-2 px-3 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 font-medium text-xs flex items-center justify-center space-x-1.5 transition-colors">
+                  <i data-lucide="flag" class="w-3.5 h-3.5"></i>
+                  <span>Flag for Review</span>
+                </button>
+
+                <button id="hitlRejectBtn" class="py-2 px-3 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 font-medium text-xs flex items-center justify-center space-x-1.5 transition-colors">
+                  <i data-lucide="ban" class="w-3.5 h-3.5"></i>
+                  <span>Reject Invoice</span>
+                </button>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Tab 4: Raw OCR Text -->
-          <div class="tab-pane" id="tab-ocr">
-            <pre class="code-preview" id="rawOcrText">Raw OCR text extracted from Textract will appear here.</pre>
-          </div>
-
-          <!-- Tab 5: DynamoDB Record JSON -->
-          <div class="tab-pane" id="tab-json">
-            <pre class="code-preview json" id="rawJsonRecord">{ "message": "No document selected." }</pre>
-          </div>
         </div>
+
       </section>
-    </main>
 
-    <!-- Document History Catalog -->
-    <section class="history-section">
-      <div class="history-header">
-        <div class="section-title">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-          <h2>Processed Documents Catalog (Amazon DynamoDB)</h2>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- HISTORICAL AUDIT LEDGER & RECORDS TABLE                                   -->
+    <!-- ========================================================================= -->
+    <section class="bg-[#0f172a]/90 border border-slate-800 rounded-xl p-5 shadow-lg shadow-black/20 space-y-4">
+      
+      <!-- Ledger Header & Filter Controls -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-100">Audit Ledger & Records Catalog</h2>
+          <p class="text-xs text-slate-400">Historical compliance logs saved in relational database</p>
         </div>
-        <div class="history-controls">
-          <input type="text" id="searchDocsInput" placeholder="Filter by filename, ID, or category..." class="search-input">
-          <button id="clearHistoryBtn" class="btn text-btn">Clear History</button>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Text Search Box -->
+          <div class="relative">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5"></i>
+            <input type="text" id="ledgerSearchInput" placeholder="Search vendor, invoice #..." class="pl-8 pr-3 py-1.5 text-xs rounded-md bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-slate-500 w-48 sm:w-60 font-sans">
+          </div>
+
+          <!-- Status Filter Buttons -->
+          <div class="flex items-center space-x-1 bg-slate-900 p-1 rounded-md border border-slate-800 text-xs">
+            <button data-filter="ALL" class="ledger-filter-btn px-2 py-1 rounded text-slate-200 bg-slate-800 font-medium">All</button>
+            <button data-filter="APPROVED" class="ledger-filter-btn px-2 py-1 rounded text-slate-400 hover:text-slate-200">Approved</button>
+            <button data-filter="PENDING_REVIEW" class="ledger-filter-btn px-2 py-1 rounded text-slate-400 hover:text-slate-200">Flagged</button>
+            <button data-filter="REJECTED" class="ledger-filter-btn px-2 py-1 rounded text-slate-400 hover:text-slate-200">Rejected</button>
+          </div>
+
+          <button id="refreshLedgerBtn" class="p-1.5 rounded-md border border-slate-700 hover:bg-slate-800 text-slate-400 hover:text-slate-200" title="Refresh Table">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
         </div>
       </div>
 
-      <div class="table-container history-table-container">
-        <table class="history-table">
-          <thead>
+      <!-- Ledger Table -->
+      <div class="border border-slate-800 rounded-lg overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-900/90 text-slate-400 border-b border-slate-800 text-[11px]">
             <tr>
-              <th style="width: 15%;">Document ID</th>
-              <th style="width: 25%;">Filename</th>
-              <th style="width: 14%;">Category</th>
-              <th style="width: 12%;">Entities Found</th>
-              <th style="width: 12%;">Latency</th>
-              <th style="width: 10%;">Status</th>
-              <th style="width: 12%;">Processed At</th>
-              <th style="width: 8%; text-align: center;">Action</th>
+              <th class="py-2.5 px-3">Status</th>
+              <th class="py-2.5 px-3">Invoice #</th>
+              <th class="py-2.5 px-3">Vendor</th>
+              <th class="py-2.5 px-3 text-right">Total Amount</th>
+              <th class="py-2.5 px-3">Thread ID</th>
+              <th class="py-2.5 px-3">Timestamp</th>
+              <th class="py-2.5 px-3 text-center">Action</th>
             </tr>
           </thead>
-          <tbody id="historyTableBody">
+          <tbody id="ledgerTableBody" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+            <!-- Populated dynamically -->
             <tr>
-              <td colspan="8" class="empty-state">Loading document history...</td>
+              <td colspan="7" class="py-8 text-center text-slate-500 font-sans">
+                Loading audit ledger...
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
+
     </section>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODALS: RAW JSON INSPECTOR & API SETTINGS                                 -->
+  <!-- ========================================================================= -->
+
+  <!-- Modal 1: Developer Raw JSON Payload Inspector -->
+  <div id="rawJsonModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#0f172a] border border-slate-800 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+      <div class="flex items-center justify-between p-4 border-b border-slate-800">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="terminal" class="w-4 h-4 text-sky-400"></i>
+          <h3 class="text-sm font-semibold text-slate-100 font-mono">FastAPI Raw JSON Response</h3>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="copyJsonBtn" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 border border-slate-700 flex items-center space-x-1">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Copy JSON</span>
+          </button>
+          <button id="closeJsonModalBtn" class="text-slate-400 hover:text-slate-200 p-1">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+      <div class="p-4 overflow-y-auto flex-1 font-mono text-xs text-slate-300 bg-slate-950/80">
+        <pre id="rawJsonCodeBlock" class="whitespace-pre-wrap">{}</pre>
+      </div>
+    </div>
   </div>
 
+  <!-- Modal 2: API Endpoint Configuration -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#0f172a] border border-slate-800 rounded-xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
+          <h3 class="text-sm font-semibold text-slate-100">API Endpoint Configuration</h3>
+        </div>
+        <button id="closeSettingsModalBtn" class="text-slate-400 hover:text-slate-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label for="apiUrlInput" class="block font-medium text-slate-300 mb-1">FastAPI Backend Base URL</label>
+          <input type="text" id="apiUrlInput" value="http://localhost:8000" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:outline-none focus:border-emerald-500">
+          <p class="text-[11px] text-slate-500 mt-1">Default: <code>http://localhost:8000</code></p>
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2 border-t border-slate-800">
+        <button id="resetSettingsBtn" class="px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-400 hover:text-slate-200">Reset</button>
+        <button id="saveSettingsBtn" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium">Save & Test</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notification -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- Application Logic JS -->
   <script src="app.js"></script>
 </body>
 </html>

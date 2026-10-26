@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: docaudit_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: audit_db
+      MYSQL_USER: audit_user
+      MYSQL_PASSWORD: audit_password
+    # Note: No host ports needed for MySQL. FastAPI communicates internally over Docker's network.
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: docaudit_api
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=mysql+pymysql://audit_user:audit_password@db:3306/audit_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
