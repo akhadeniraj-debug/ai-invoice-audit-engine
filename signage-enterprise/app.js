@@ -1,5 +1,5 @@
 /**
- * ApexSign Industrial & Architectural Signage Enterprise
+ * Sai Arts - Precision 3D Acrylic Letters, ACP Facades & Industrial Safety Signage
  * Product Catalog, Dynamic Dimension & Material Estimator, and WhatsApp Quotation Engine.
  */
 
@@ -415,18 +415,18 @@ const state = {
   selectedColorId: "pure-white",
   selectedLightingId: "samsung-6500k",
   selectedFacadeWall: "facade-granite",
-  previewText: "APEX SIGNAGE",
+  previewText: "SAI ARTS",
 
   // Dimensions
-  widthFt: 10,
+  widthFt: 8,
   widthIn: 0,
-  heightFt: 3,
+  heightFt: 4,
   heightIn: 0,
   letterHeightIn: 12,
-  letterCount: 11,
+  letterCount: 7,
 
   // Workshop Admin Master Rates in INR (₹)
-  rates: JSON.parse(localStorage.getItem("apex_sign_rates")) || {
+  rates: JSON.parse(localStorage.getItem("sai_arts_rates")) || JSON.parse(localStorage.getItem("apex_sign_rates")) || {
     baseSqftRate: 420,
     baseLetterRate: 95,
     ledModuleSurcharge: 160,
@@ -781,7 +781,7 @@ function update3DPreviewVisualizer() {
   const product = getActiveProduct();
   const light = product.lightingOptions.find((l) => l.id === state.selectedLightingId) || product.lightingOptions[0];
 
-  dom.previewSignText.textContent = state.previewText || "APEX SIGNAGE";
+  dom.previewSignText.textContent = state.previewText || "SAI ARTS";
   dom.previewSignText.style.color = color.hex;
 
   // Apply lighting glow
@@ -823,10 +823,10 @@ function bindInputEvents() {
   [dom.inputWidthFt, dom.inputWidthIn, dom.inputHeightFt, dom.inputHeightIn].forEach((input) => {
     if (input) {
       input.addEventListener("input", () => {
-        state.widthFt = Number(dom.inputWidthFt.value) || 0;
-        state.widthIn = Number(dom.inputWidthIn.value) || 0;
-        state.heightFt = Number(dom.inputHeightFt.value) || 0;
-        state.heightIn = Number(dom.inputHeightIn.value) || 0;
+        state.widthFt = Math.max(0, Number(dom.inputWidthFt.value) || 0);
+        state.widthIn = Math.max(0, Math.min(11, Number(dom.inputWidthIn.value) || 0));
+        state.heightFt = Math.max(0, Number(dom.inputHeightFt.value) || 0);
+        state.heightIn = Math.max(0, Math.min(11, Number(dom.inputHeightIn.value) || 0));
         recalculateQuotation();
       });
     }
@@ -835,23 +835,27 @@ function bindInputEvents() {
   // Letter inputs
   if (dom.inputLetterHeight) {
     dom.inputLetterHeight.addEventListener("input", (e) => {
-      state.letterHeightIn = Number(e.target.value) || 12;
+      const val = Number(e.target.value);
+      state.letterHeightIn = isFinite(val) && val > 0 ? val : 12;
       recalculateQuotation();
     });
   }
 
   if (dom.inputLetterCount) {
     dom.inputLetterCount.addEventListener("input", (e) => {
-      state.letterCount = Number(e.target.value) || 1;
+      const val = Number(e.target.value);
+      state.letterCount = isFinite(val) && val > 0 ? Math.round(val) : 1;
       recalculateQuotation();
     });
   }
 
   if (dom.inputPreviewText) {
     dom.inputPreviewText.addEventListener("input", (e) => {
-      const text = e.target.value.trim().toUpperCase() || "APEX SIGNAGE";
-      state.previewText = text;
-      state.letterCount = text.replace(/\s+/g, "").length || 1;
+      const raw = e.target.value;
+      const text = raw.toUpperCase();
+      state.previewText = text.trim() ? text : "SAI ARTS";
+      const charCount = text.replace(/\s+/g, "").length;
+      state.letterCount = charCount > 0 ? charCount : 1;
       if (dom.inputLetterCount) dom.inputLetterCount.value = state.letterCount;
       update3DPreviewVisualizer();
       recalculateQuotation();
@@ -878,6 +882,15 @@ function bindInputEvents() {
     });
   }
 
+  if (dom.adminPinInput) {
+    dom.adminPinInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (dom.unlockAdminBtn) dom.unlockAdminBtn.click();
+      }
+    });
+  }
+
   if (dom.unlockAdminBtn) {
     dom.unlockAdminBtn.addEventListener("click", () => {
       const pin = dom.adminPinInput.value.trim();
@@ -886,7 +899,7 @@ function bindInputEvents() {
         dom.adminUnlockForm.classList.add("hidden");
         dom.adminControlsArea.classList.remove("hidden");
         populateAdminRates();
-        showToast("Workshop Admin Panel Unlocked!", "success");
+        showToast("Sai Arts Workshop Admin Panel Unlocked!", "success");
       } else {
         showToast("Incorrect Admin PIN (Default is 1234)", "error");
       }
@@ -895,13 +908,18 @@ function bindInputEvents() {
 
   if (dom.saveAdminRatesBtn) {
     dom.saveAdminRatesBtn.addEventListener("click", () => {
-      state.rates.baseSqftRate = Number(dom.adminRateSqft.value) || 420;
-      state.rates.baseLetterRate = Number(dom.adminRateLetter.value) || 95;
-      state.rates.ledModuleSurcharge = Number(dom.adminRateLed.value) || 160;
-      state.rates.installationRate = Number(dom.adminRateInstall.value) || 85;
+      const sqftRate = Number(dom.adminRateSqft.value);
+      const letterRate = Number(dom.adminRateLetter.value);
+      const ledRate = Number(dom.adminRateLed.value);
+      const installRate = Number(dom.adminRateInstall.value);
 
-      localStorage.setItem("apex_sign_rates", JSON.stringify(state.rates));
-      showToast("Live Workshop Rates Updated & Saved!", "success");
+      state.rates.baseSqftRate = isFinite(sqftRate) && sqftRate >= 0 ? sqftRate : 420;
+      state.rates.baseLetterRate = isFinite(letterRate) && letterRate >= 0 ? letterRate : 95;
+      state.rates.ledModuleSurcharge = isFinite(ledRate) && ledRate >= 0 ? ledRate : 160;
+      state.rates.installationRate = isFinite(installRate) && installRate >= 0 ? installRate : 85;
+
+      localStorage.setItem("sai_arts_rates", JSON.stringify(state.rates));
+      showToast("Sai Arts Live Workshop Rates Updated & Saved!", "success");
       recalculateQuotation();
     });
   }
@@ -914,7 +932,7 @@ function bindInputEvents() {
       const phone = document.getElementById("leadPhone").value;
       const city = document.getElementById("leadCity").value;
       const product = getActiveProduct().name;
-      const msg = `Hello ApexSign team, I requested an architectural consultation: Name: ${name}, Phone: ${phone}, City: ${city}, Board Type: ${product}.`;
+      const msg = `Hello Sai Arts team, I requested an architectural consultation: Name: ${name}, Phone: ${phone}, City: ${city}, Board Type: ${product}.`;
       window.open(`https://wa.me/919876543210?text=${encodeURIComponent(msg)}`, "_blank");
       showToast("Consultation request submitted!", "success");
       dom.leadCaptureForm.reset();
@@ -934,6 +952,8 @@ function populateAdminRates() {
 // ============================================================================
 function recalculateQuotation() {
   const product = getActiveProduct();
+  if (!product) return;
+
   const material = product.materialGrades.find((m) => m.id === state.selectedMaterialId) || product.materialGrades[0];
   const lighting = product.lightingOptions.find((l) => l.id === state.selectedLightingId) || product.lightingOptions[0];
   const color = COLOR_SWATCHES.find((c) => c.id === state.selectedColorId) || COLOR_SWATCHES[0];
@@ -944,44 +964,63 @@ function recalculateQuotation() {
   let installCost = 0;
 
   if (product.unitType === "sqft") {
-    const totalWidthFt = state.widthFt + state.widthIn / 12;
-    const totalHeightFt = state.heightFt + state.heightIn / 12;
+    const totalWidthFt = Math.max(0, state.widthFt + state.widthIn / 12);
+    const totalHeightFt = Math.max(0, state.heightFt + state.heightIn / 12);
     const sqft = Math.max(1, totalWidthFt * totalHeightFt);
 
     dimensionStr = `${state.widthFt} ft ${state.widthIn} in (W) × ${state.heightFt} ft ${state.heightIn} in (H) = ${sqft.toFixed(2)} Sq.Ft`;
     if (dom.calculatedDimensionSummary) dom.calculatedDimensionSummary.textContent = `${sqft.toFixed(2)} Sq.Ft Total Area`;
 
-    baseCost = sqft * state.rates.baseSqftRate * material.multiplier;
-    lightingCost = sqft * lighting.surcharge;
-    installCost = sqft * state.rates.installationRate;
+    const baseRate = isFinite(state.rates.baseSqftRate) ? state.rates.baseSqftRate : 420;
+    const mult = isFinite(material.multiplier) ? material.multiplier : 1.0;
+    const ledSur = isFinite(lighting.surcharge) ? lighting.surcharge : 0;
+    const instRate = isFinite(state.rates.installationRate) ? state.rates.installationRate : 85;
+
+    baseCost = sqft * baseRate * mult;
+    lightingCost = sqft * ledSur;
+    installCost = sqft * instRate;
   } else {
     // 3D Letter Unit
-    const runningInches = state.letterHeightIn * state.letterCount;
-    dimensionStr = `${state.letterCount} Letters × ${state.letterHeightIn}" Height = ${runningInches} Total Running Inches`;
-    if (dom.calculatedDimensionSummary) dom.calculatedDimensionSummary.textContent = `${runningInches} Running Inches (${state.letterCount} Letters)`;
+    const validCount = Math.max(1, isFinite(state.letterCount) ? state.letterCount : 1);
+    const validHeight = Math.max(1, isFinite(state.letterHeightIn) ? state.letterHeightIn : 12);
+    const runningInches = validCount * validHeight;
 
-    baseCost = runningInches * state.rates.baseLetterRate * material.multiplier;
-    lightingCost = state.letterCount * lighting.surcharge;
-    installCost = state.letterCount * state.rates.installationRate * 1.5;
+    dimensionStr = `${validCount} Letters × ${validHeight}" Height = ${runningInches} Total Running Inches`;
+    if (dom.calculatedDimensionSummary) dom.calculatedDimensionSummary.textContent = `${runningInches} Running Inches (${validCount} Letters)`;
+
+    const letterRate = isFinite(state.rates.baseLetterRate) ? state.rates.baseLetterRate : 95;
+    const mult = isFinite(material.multiplier) ? material.multiplier : 1.0;
+    const ledSur = isFinite(lighting.surcharge) ? lighting.surcharge : 0;
+    const instRate = isFinite(state.rates.installationRate) ? state.rates.installationRate : 85;
+
+    baseCost = runningInches * letterRate * mult;
+    lightingCost = validCount * ledSur;
+    installCost = validCount * instRate * 1.5;
   }
 
+  // Guard against negative numbers or NaN
+  baseCost = Math.max(0, isFinite(baseCost) ? baseCost : 0);
+  lightingCost = Math.max(0, isFinite(lightingCost) ? lightingCost : 0);
+  installCost = Math.max(0, isFinite(installCost) ? installCost : 0);
+
   const subtotal = Math.round(baseCost + lightingCost + installCost);
-  const gstAmount = Math.round(subtotal * (state.rates.gstPercent / 100));
+  const gstPercent = isFinite(state.rates.gstPercent) ? state.rates.gstPercent : 18;
+  const gstAmount = Math.round(subtotal * (gstPercent / 100));
   const grandTotal = subtotal + gstAmount;
 
   // Update Quotation UI
-  dom.quoteProductName.textContent = product.name;
-  dom.quoteMaterialSpecs.textContent = `${material.name} (Substrate Multiplier: ${material.multiplier}x)`;
-  dom.quoteColorShade.textContent = `${color.name} (${color.hex})`;
-  dom.quoteLightingSpec.textContent = lighting.name;
-  dom.quoteDimensions.textContent = dimensionStr;
+  if (dom.quoteProductName) dom.quoteProductName.textContent = product.name;
+  if (dom.quoteMaterialSpecs) dom.quoteMaterialSpecs.textContent = `${material.name} (Substrate Multiplier: ${material.multiplier}x)`;
+  if (dom.quoteColorShade) dom.quoteColorShade.textContent = `${color.name} (${color.hex})`;
+  if (dom.quoteLightingSpec) dom.quoteLightingSpec.textContent = lighting.name;
+  if (dom.quoteDimensions) dom.quoteDimensions.textContent = dimensionStr;
 
-  dom.quoteCostBase.textContent = `₹${Math.round(baseCost).toLocaleString("en-IN")}`;
-  dom.quoteCostLighting.textContent = `₹${Math.round(lightingCost).toLocaleString("en-IN")}`;
-  dom.quoteCostInstall.textContent = `₹${Math.round(installCost).toLocaleString("en-IN")}`;
-  dom.quoteSubtotal.textContent = `₹${subtotal.toLocaleString("en-IN")}`;
-  dom.quoteGstAmount.textContent = `₹${gstAmount.toLocaleString("en-IN")}`;
-  dom.quoteGrandTotal.textContent = `₹${grandTotal.toLocaleString("en-IN")}`;
+  if (dom.quoteCostBase) dom.quoteCostBase.textContent = `₹${Math.round(baseCost).toLocaleString("en-IN")}`;
+  if (dom.quoteCostLighting) dom.quoteCostLighting.textContent = `₹${Math.round(lightingCost).toLocaleString("en-IN")}`;
+  if (dom.quoteCostInstall) dom.quoteCostInstall.textContent = `₹${Math.round(installCost).toLocaleString("en-IN")}`;
+  if (dom.quoteSubtotal) dom.quoteSubtotal.textContent = `₹${subtotal.toLocaleString("en-IN")}`;
+  if (dom.quoteGstAmount) dom.quoteGstAmount.textContent = `₹${gstAmount.toLocaleString("en-IN")}`;
+  if (dom.quoteGrandTotal) dom.quoteGrandTotal.textContent = `₹${grandTotal.toLocaleString("en-IN")}`;
 
   // Store active estimate for export
   state.currentEstimate = {
@@ -1004,7 +1043,7 @@ function shareQuotationWhatsApp() {
   if (!est) return;
 
   const msg = 
-`*APEXSIGN INDUSTRIAL & ARCHITECTURAL QUOTATION*
+`*SAI ARTS INDUSTRIAL & ARCHITECTURAL QUOTATION*
 📄 *Estimate Ref:* ${dom.quoteSerialNo ? dom.quoteSerialNo.textContent : "EST-2026-ONLINE"}
 📅 *Date:* ${dom.quoteDate ? dom.quoteDate.textContent : new Date().toLocaleDateString()}
 ------------------------------------

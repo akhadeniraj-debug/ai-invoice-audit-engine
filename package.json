@@ -1,0 +1,10 @@
+{
+  "name": "sai-arts-signage",
+  "version": "1.0.0",
+  "description": "Sai Arts - Precision 3D Acrylic Letters, ACP Facades & Industrial Safety Signage",
+  "scripts": {
+    "start": "python -m http.server 8080 -d signage-enterprise"
+  },
+  "author": "Sai Arts Enterprise",
+  "license": "ISC"
+}
