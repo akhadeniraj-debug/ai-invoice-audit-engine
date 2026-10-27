@@ -1,0 +1,123 @@
+/* ==========================================================================
+   ApexSign Industrial & Architectural Signage Enterprise Design System
+   ========================================================================== */
+
+/* Typography & Tabular Figures */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Minimalist Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Subtle Architectural Grid Background for Builder Canvas */
+.architectural-grid {
+  background-color: #0f172a;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Wall Texture Simulators */
+.facade-granite {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.facade-concrete {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.facade-wood {
+  background: linear-gradient(135deg, #451a03 0%, #291204 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.facade-glass {
+  background: linear-gradient(135deg, #0c4a6e 0%, #082f49 100%);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+/* 3D Sign Letter Lighting Simulator Effects */
+.glow-frontlit {
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.7), 0 0 32px rgba(255, 255, 255, 0.3);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+}
+
+.glow-warm {
+  text-shadow: 0 0 18px rgba(251, 191, 36, 0.8), 0 0 36px rgba(245, 158, 11, 0.4);
+}
+
+.glow-halo {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.letter-3d-bevel {
+  transform: perspective(600px) rotateX(4deg);
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+/* Color Swatches Active Indicator */
+.swatch-item {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.swatch-item:hover {
+  transform: translateY(-2px);
+}
+.swatch-item.active {
+  ring-width: 2px;
+  ring-offset-width: 2px;
+  transform: scale(1.08);
+}
+
+/* Print Stylesheet for Official Corporate Estimation Invoice */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt;
+  }
+
+  /* Hide navigation, heroes, marketing grids, sticky buttons, and admin controls */
+  header,
+  footer,
+  #hero-section,
+  #configurator-tabs-container,
+  #configurator-options-panel,
+  #trust-grid-section,
+  #portfolio-section,
+  #lead-capture-section,
+  #whatsapp-floating-btn,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Make Quote Sheet Full-Width and Clean */
+  #quotation-invoice-container {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+  }
+
+  .print-break-inside {
+    break-inside: avoid;
+  }
+}
