@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 from typing import List, Optional
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     ForeignKey,
@@ -80,3 +81,19 @@ class DiscrepancyRecord(Base):
 
 
     document = relationship("DocumentRecord", back_populates="discrepancies")
+
+
+class ApiKeyRecord(Base):
+    """Relational table storing API keys, hashed credentials, and client rate limit tiers."""
+
+    __tablename__ = "api_key_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    client_name = Column(String(255), nullable=False)
+    key_prefix = Column(String(32), nullable=False, index=True)
+    hashed_key = Column(String(64), unique=True, nullable=False, index=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    rate_limit_rpm = Column(Integer, default=60, nullable=False)
+    created_at = Column(DateTime, default=get_utc_now, nullable=False)
+    last_used_at = Column(DateTime, nullable=True)
+

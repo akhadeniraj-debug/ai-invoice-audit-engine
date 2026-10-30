@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
 
+    # Redis Configuration (Sliding Window Rate Limiter)
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    DEFAULT_RATE_LIMIT_RPM: int = 60
+
     # LLM Settings (Groq, Gemini, OpenAI)
     GROQ_API_KEY: Optional[str] = os.getenv("GROQ_API_KEY")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
